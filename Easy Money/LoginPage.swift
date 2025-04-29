@@ -29,7 +29,7 @@ struct LoginPage: View {
             VStack(spacing: 24) {
               Text("Welcome Back!")
                     .font(.custom("Chewy-Regular", size: 50))
-                .foregroundColor(Color("Brown1"))
+                    .foregroundColor(.white)
 
               TextField("Username", text: $username)
                 .padding()
@@ -49,7 +49,7 @@ struct LoginPage: View {
               .font(.custom("Chewy-Regular", size: 35))
               .frame(maxWidth: .infinity, minHeight: 50)
               .background(Color("ActionButton"))
-              .foregroundColor(Color("Brown1"))
+              .foregroundColor(.white)
               .cornerRadius(25)
               .shadow(radius: 3, y: 2)
 
@@ -69,7 +69,7 @@ struct LoginPage: View {
               NavigationLink("Create New Account",
                              destination: SignupPage(isLoggedIn: $isLoggedIn))
                 .font(.custom("Chewy-Regular", size: 20))
-                .foregroundColor(Color("Brown1"))
+                .foregroundColor(.white)
                 .padding(.bottom, 30)   // breathe room under the home-indicator
             }
             // Ensure it spans the full area so the Spacer() works:

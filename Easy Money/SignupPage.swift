@@ -15,29 +15,57 @@ struct SignupPage: View {
     @State private var errorMessage = ""
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Create a New Account").font(.largeTitle)
-
-            TextField("Username", text: $username)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            SecureField("Password", text: $password)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            SecureField("Confirm Password", text: $confirmPassword)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            Text(errorMessage)
-                .foregroundColor(.red)
-                .font(.footnote)
-
-            Button("Create Account") {
-                createAccount()
+        GeometryReader{ geo in
+            ZStack {
+                // 1) Your fullscreen background
+                Image("AppBackground")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .frame(width: geo.size.width,
+                           height: geo.size.height)
+                
+                
+                VStack(spacing: 24) {
+                    Text("Welcome!")
+                        .font(.custom("Chewy-Regular", size: 50))
+                        .foregroundColor(.white)
+                    
+                    TextField("Username", text: $username)
+                        .padding()
+                        .background(Color.white.opacity(0.5))
+                        .cornerRadius(25)
+                        .shadow(radius: 2, y: 1)
+                    SecureField("Password", text: $password)
+                        .padding()
+                        .background(Color.white.opacity(0.5))
+                        .cornerRadius(25)
+                        .shadow(radius: 2, y: 1)
+                    SecureField("Confirm Password", text: $confirmPassword)
+                        .padding()
+                        .background(Color.white.opacity(0.5))
+                        .cornerRadius(25)
+                        .shadow(radius: 2, y: 1)
+                    
+                    Button("Create Account") {
+                        createAccount()
+                    }
+                    .font(.custom("Chewy-Regular", size: 35))
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(Color("ActionButton"))
+                    .foregroundColor(.white)
+                    .cornerRadius(25)
+                    .shadow(radius: 3, y: 2)
+                    
+                    Text(errorMessage)
+                        .foregroundColor(.red)
+                        .font(.footnote)
+                }
+                
+                
+                .padding()
             }
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(8)
         }
-        .padding()
     }
 
     private func createAccount() {
