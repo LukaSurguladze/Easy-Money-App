@@ -14,46 +14,71 @@ struct LoginPage: View {
     @State private var errorMessage = ""
 
     var body: some View {
-            NavigationView {
-                GeometryReader{ geo in
-                    ZStack {
-                        Image("AppBackground")
-                            .resizable()
-                            .scaledToFill()
-                            .edgesIgnoringSafeArea(.all)
-                            .frame(width:  geo.size.width, height: geo.size.height,
-                                   alignment: .center)
-                        
-                        
-                        VStack(spacing: 16) {
-                            Text("Login").font(.largeTitle)
-                            
-                            TextField("Username", text: $username)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            SecureField("Password", text: $password)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                            
-                            Text(errorMessage)
-                                .foregroundColor(.red)
-                                .font(.footnote)
-                            
-                            Button("Login") {
-                                loginUser()
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(Color.green)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                            
-                            NavigationLink("Create New Account", destination: SignupPage(isLoggedIn: $isLoggedIn))
-                                .padding(.top, 8)
-                        }
-                        .padding()
-                        .navigationBarHidden(true)
-                    }
-                }
+      NavigationView {
+        GeometryReader { geo in
+          ZStack {
+            // 1) Your fullscreen background
+            Image("AppBackground")
+              .resizable()
+              .scaledToFill()
+              .edgesIgnoringSafeArea(.all)
+              .frame(width: geo.size.width,
+                     height: geo.size.height)
+
+            // 2) Your existing form stays in place
+            VStack(spacing: 24) {
+              Text("Welcome Back!")
+                    .font(.custom("Chewy-Regular", size: 50))
+                .foregroundColor(Color("Brown1"))
+
+              TextField("Username", text: $username)
+                .padding()
+                .background(Color.white.opacity(0.5))
+                .cornerRadius(25)
+                .shadow(radius: 2, y: 1)
+
+              SecureField("Password", text: $password)
+                .padding()
+                .background(Color.white.opacity(0.5))
+                .cornerRadius(25)
+                .shadow(radius: 2, y: 1)
+
+              Button("Login") {
+                loginUser()
+              }
+              .font(.custom("Chewy-Regular", size: 35))
+              .frame(maxWidth: .infinity, minHeight: 50)
+              .background(Color("ActionButton"))
+              .foregroundColor(Color("Brown1"))
+              .cornerRadius(25)
+              .shadow(radius: 3, y: 2)
+
+              Text(errorMessage)
+                .foregroundColor(.red)
+                .font(.footnote)
+
+              // Note: NO Spacer here!
+              // NavigationLink was here before but we moved it out
             }
+            .padding()
+            .navigationBarHidden(true)
+
+            // 3) A second VStack that lives on top, pinned to the bottom:
+            VStack {
+              Spacer()   // push the link down
+              NavigationLink("Create New Account",
+                             destination: SignupPage(isLoggedIn: $isLoggedIn))
+                .font(.custom("Chewy-Regular", size: 20))
+                .foregroundColor(Color("Brown1"))
+                .padding(.bottom, 30)   // breathe room under the home-indicator
+            }
+            // Ensure it spans the full area so the Spacer() works:
+            .frame(width: geo.size.width, height: geo.size.height)
+          }
         }
+        .navigationViewStyle(.stack)
+      }
+    }
     private func loginUser() {
         // Fetch the global user→password map
         let allCreds = UserDefaults.standard.dictionary(forKey: "allUserCredentials") as? [String:String] ?? [:]
