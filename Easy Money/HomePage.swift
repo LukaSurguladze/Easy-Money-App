@@ -7,50 +7,126 @@
 
 import SwiftUI
 
-struct FilledButton: ButtonStyle {
+struct spentButton: ButtonStyle {
     let color: Color
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(color)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-            .opacity(configuration.isPressed ? 0.7 : 1)
+            .font(.custom("Chewy-Regular", size: 25))
+            .frame(maxWidth: 150, minHeight: 150)
+            .background(Image("SPbackground").resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all))
+            .foregroundColor(.black)
+            .cornerRadius(25)
+            .opacity(1)
+            .shadow(radius: 3, y: 2)
+    }
+}
+struct madeButton: ButtonStyle {
+    let color: Color
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.custom("Chewy-Regular", size: 25))
+            .frame(maxWidth: 150, minHeight: 150)
+            .background(Image("MPbackground").resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all))
+            .foregroundColor(.black)
+            .cornerRadius(25)
+            .opacity(1)
+            .shadow(radius: 3, y: 2)
+    }
+}
+struct reportButton: ButtonStyle {
+    let color: Color
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.custom("Chewy-Regular", size: 25))
+            .frame(maxWidth: 150, minHeight: 150)
+            .background(Image("RPbackground").resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all))
+            .foregroundColor(.black)
+            .cornerRadius(25)
+            .opacity(1)
+            .shadow(radius: 3, y: 2)
+    }
+}
+struct catButton: ButtonStyle {
+    let color: Color
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.custom("Chewy-Regular", size: 25))
+            .frame(maxWidth: 150, minHeight: 150)
+            .background(Image("CPbackground").resizable()
+                .scaledToFill()
+                .edgesIgnoringSafeArea(.all))
+            .foregroundColor(.black)
+            .cornerRadius(25)
+            .opacity(1)
+            .shadow(radius: 3, y: 2)
+    }
+}
+struct logoutButton: ButtonStyle {
+    let color: Color
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.custom("Chewy-Regular", size: 25))
     }
 }
 
 struct HomePage: View {
     @Binding var isLoggedIn: Bool
+    let columns = [
+        GridItem(.flexible()),
+        GridItem(.flexible())
+    ]
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Welcome to the Home Page!")
-                    .font(.title)
-                    .padding()
-
-                NavigationLink("Go to Spend Page", destination: SpendPage())
-                    .buttonStyle(FilledButton(color: .blue))
-
-                NavigationLink("Go to Made Page", destination: MadePage())
-                    .buttonStyle(FilledButton(color: .green))
-
-                NavigationLink("View Report", destination: ReportPage())
-                    .buttonStyle(FilledButton(color: .purple))
-
-                NavigationLink("View Categories", destination: PersonPage())
-                    .buttonStyle(FilledButton(color: .orange))
-
-                Spacer()
-
-                Button("Logout") {
-                    logout()
-                }
-                .buttonStyle(FilledButton(color: .red))
-            }
+            
+            GeometryReader { geo in
+                ZStack {
+                    // 1) Your fullscreen background
+                    Image("HPbackground")
+                        .resizable()
+                        .scaledToFill()
+                        .edgesIgnoringSafeArea(.all)
+                        .frame(width: geo.size.width,
+                               height: geo.size.height)
+                    
+                    VStack(spacing: 24) {
+                        Text("Pocket Insight")
+                            .font(.custom("Chewy-Regular", size: 50))
+                            .foregroundColor(.black)
+                            .padding()
+                        
+                        LazyVGrid(columns: columns, spacing: 20) {
+                                NavigationLink("Spent", destination: SpendPage())
+                                .buttonStyle(spentButton(color: .red))
+                                
+                                NavigationLink("Earned", destination: MadePage())
+                                    .buttonStyle(madeButton(color: .green))
+                                
+                                NavigationLink("Report", destination: ReportPage())
+                                    .buttonStyle(reportButton(color: .purple))
+                                
+                                NavigationLink("Categories", destination: PersonPage())
+                                    .buttonStyle(catButton(color: .orange))
+                            }
+                        Spacer()
+                        
+                        Button("Logout") {
+                            logout()
+                        }
+                        .buttonStyle(logoutButton(color: .red))
+                    }
+               
+            
             .padding()
             .navigationBarHidden(true)
+        }
+        }
         }
     }
 
