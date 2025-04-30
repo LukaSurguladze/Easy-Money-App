@@ -17,56 +17,74 @@ struct PersonPage: View {
     @State private var isEditing = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Text("Your Categories")
-                .font(.title)
-                .padding(.top)
-
-            List {
-                ForEach(categories, id: \.self) { cat in
-                    HStack {
-                        Text(cat)
-                        Spacer()
-                        Text("$\(amounts[cat] ?? 0, specifier: "%.2f")")
+        GeometryReader{ geo in
+            ZStack {
+                Image("CPbackground")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .frame(width: geo.size.width,
+                           height: geo.size.height)
+                
+                VStack(spacing: 0) {
+                    Text("Your Categories")
+                        .font(.custom("Chewy-Regular", size: 50))
+                        .foregroundColor(.black)
+                        .padding(.top)
+                    
+                    List {
+                        ForEach(categories, id: \.self) { cat in
+                            HStack {
+                                Text(cat)
+                                    .font(.custom("Chewy-Regular", size: 20))
+                                Spacer()
+                                Text("$\(amounts[cat] ?? 0, specifier: "%.2f")")
+                                    .font(.custom("Chewy-Regular", size: 20))
+                            }
+                            .listRowBackground(Color.clear)
+                        }
+                        .onDelete(perform: deleteCategories)
+                    }
+                    .listStyle(.insetGrouped)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.clear)
+                    .scrollContentBackground(.hidden)
+                    
+                    Button("Add New Category") {
+                        showAddAlert = true
+                    }
+                    .font(.custom("Chewy-Regular", size: 20))
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(Color.pink.opacity(0.65))
+                    .foregroundColor(.black)
+                    .cornerRadius(8)
+                    .padding(.horizontal)
+                    .padding(.bottom, 10)
+                }
+                .toolbar {
+                    // Edit/Done button
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(isEditing ? "Done" : "Edit") {
+                            withAnimation { isEditing.toggle() }
+                        }
                     }
                 }
-                .onDelete(perform: deleteCategories)
-            }
-            .listStyle(.insetGrouped)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            Button("Add New Category") {
-                showAddAlert = true
-            }
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(Color.orange)
-            .foregroundColor(.white)
-            .cornerRadius(8)
-            .padding(.horizontal)
-            .padding(.bottom, 10)
-        }
-        .navigationBarTitle("Summary", displayMode: .inline)
-        .toolbar {
-            // Edit/Done button
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(isEditing ? "Done" : "Edit") {
-                    withAnimation { isEditing.toggle() }
+                .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
+                .onAppear {
+                    loadCategories()
+                    loadSummary()
+                }
+                .alert("Add Category", isPresented: $showAddAlert) {
+                    TextField("Category Name", text: $newGroupName)
+                    Button("Add", action: addCategory)
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("Enter a new category name.")
                 }
             }
         }
-        .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
-        .onAppear {
-            loadCategories()
-            loadSummary()
-        }
-        .alert("Add Category", isPresented: $showAddAlert) {
-            TextField("Category Name", text: $newGroupName)
-            Button("Add", action: addCategory)
-            Button("Cancel", role: .cancel) { }
-        } message: {
-            Text("Enter a new category name.")
-        }
     }
+    
 
     // MARK: - Keys
 
