@@ -15,27 +15,60 @@ struct ReportPage: View {
     @State private var totalEarned: Double = 0
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Report").font(.largeTitle)
+        GeometryReader{ geo in
+            ZStack {
+                Image("RPbackground")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .frame(width: geo.size.width,
+                           height: geo.size.height)
+                
+                VStack(spacing: 16) {
+                    Text("Report")
+                        .font(.custom("Chewy-Regular", size: 50))
+                        .foregroundColor(.white)
 
-            DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
-            DatePicker("End Date",   selection: $endDate,   displayedComponents: .date)
+                    
+                    DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                        .colorScheme(.dark)
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .foregroundColor(.white)
 
-            Button("Generate Report") { generateReport() }
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background(Color.purple)
-                .foregroundColor(.white)
-                .cornerRadius(8)
+                    DatePicker("End Date",   selection: $endDate,   displayedComponents: .date)
+                        .colorScheme(.dark)
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .foregroundColor(.white)
 
-            Text("Total Spent: $\(totalSpent, specifier: "%.2f")")
-            Text("Total Earned: $\(totalEarned, specifier: "%.2f")")
+                    
+                    Button("Generate Report") { generateReport() }
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .foregroundColor(.white)
 
-            Spacer()
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(Color.purple)
+                        .foregroundColor(.white)
+                        .cornerRadius(8)
+                    
+                    Text("Total Spent: $\(totalSpent, specifier: "%.2f")")
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .foregroundColor(.white)
+
+                    Text("Total Earned: $\(totalEarned, specifier: "%.2f")")
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .foregroundColor(.white)
+
+                    
+                    Spacer()
+                }
+                .padding()
+                
+            }
         }
-        .padding()
-        .navigationBarTitle("Reports", displayMode: .inline)
     }
-
+        
+        
+        
     func generateReport() {
         totalSpent = 0; totalEarned = 0
         let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
