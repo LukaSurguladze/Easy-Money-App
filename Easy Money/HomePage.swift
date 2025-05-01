@@ -96,10 +96,20 @@ struct HomePage: View {
                                height: geo.size.height)
                     
                     VStack(spacing: 24) {
+                        
+                        HStack {
+                            NavigationLink("About Us", destination: AboutPage())
+                                .font(.custom("Chewy-Regular", size: 14))
+                                .foregroundColor(.black)
+                                .padding(.top, -20)
+                                .padding(.trailing, 20)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .topTrailing)
+                        
                         Text("Pocket Insight")
                             .font(.custom("Chewy-Regular", size: 50))
                             .foregroundColor(.black)
-                            .padding()
+                            .padding(.top, -10)
                         
                         LazyVGrid(columns: columns, spacing: 20) {
                                 NavigationLink("Spent", destination: SpendPage())
@@ -116,10 +126,34 @@ struct HomePage: View {
                             }
                         Spacer()
                         
+                        /*NavigationLink("About Us", destination: AboutPage())
+                            .font(.custom("Chewy-Regular", size: 20))
+                            .foregroundColor(.black)
+                            .padding(.bottom, 4)
+                        
                         Button("Logout") {
                             logout()
                         }
-                        .buttonStyle(logoutButton(color: .red))
+                        .buttonStyle(logoutButton(color: .red))*/
+                        
+                        HStack(spacing: 50) {
+                            
+                            Button("Logout") {
+                                logout()
+                            }
+                            .font(.custom("Chewy-Regular", size: 35))
+                            .foregroundColor(.black)
+
+                            
+                            /*NavigationLink("About Us", destination: AboutPage())
+                                .font(.custom("Chewy-Regular", size: 15))
+                                .foregroundColor(.black)*/
+
+                    }
+                        .padding(.bottom, 20)
+                        
+                        
+                        
                     }
                
             
