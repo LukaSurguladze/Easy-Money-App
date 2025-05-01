@@ -19,44 +19,67 @@ struct MadePage: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Enter the Amount Earned").font(.title)
-
-            TextField("Amount", text: $amount)
-                .keyboardType(.decimalPad)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-
-            Picker("Category", selection: $selectedCategory) {
-                ForEach(categories, id: \.self) { Text($0) }
+        GeometryReader{ geo in
+            ZStack {
+                Image("MPbackground")
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .frame(width: geo.size.width,
+                           height: geo.size.height)
+                
+                
+                VStack(spacing: 16) {
+                    Text("Amount Earned").font(.custom("Chewy-Regular", size: 50))
+                        
+                    TextField("Amount", text: $amount)
+                        .keyboardType(.decimalPad)
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .padding()
+                        .background(Color.white)
+                        .foregroundColor(.black)
+                        .cornerRadius(25)
+                        .shadow(radius: 2, y: 1)
+                        .frame(maxWidth: .infinity, minHeight: 50)
+                    
+                    Picker("Category", selection: $selectedCategory) {
+                        ForEach(categories, id: \.self) { Text($0) }
+                    }
+                    .pickerStyle(WheelPickerStyle())
+                    .frame(height: 120)
+                    .clipped()
+                    
+                    DatePicker("Date", selection: $selectedDate, displayedComponents: .date)
+                        .font(.custom("Chewy-Regular", size: 20))
+                    Text(errorMessage).foregroundColor(.red).font(.footnote)
+                    
+                    Spacer()
+                    
+                    Button("Enter") { saveAmount() }
+                        .font(.custom("Chewy-Regular", size: 20))
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(Color.green.opacity(0.75))
+                        .foregroundColor(.black)
+                        .cornerRadius(25)
+                        .shadow(radius: 2, y: 1)
+                    
+                }
+                .padding()
+                .onAppear {
+                    loadCategories()
+                }
+                .alert("Success", isPresented: $showConfirmation) {
+                    Button("OK", action: dismiss.callAsFunction)
+                } message: {
+                    Text("Your amount earned has been recorded.")
+                }
             }
-            .pickerStyle(WheelPickerStyle())
-            .frame(height: 120)
-            .clipped()
-
-            DatePicker("Date", selection: $selectedDate, displayedComponents: .date)
-
-            Text(errorMessage).foregroundColor(.red).font(.footnote)
-
-            Button("Enter") { saveAmount() }
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .background(Color.green)
-                .foregroundColor(.white)
-                .cornerRadius(8)
-
-            Spacer()
-        }
-        .padding()
-        .navigationBarTitle("Earned", displayMode: .inline)
-        .onAppear {
-            loadCategories()
-        }
-        .alert("Success", isPresented: $showConfirmation) {
-            Button("OK", action: dismiss.callAsFunction)
-        } message: {
-            Text("Your earned amount has been recorded.")
         }
     }
-
+    
+    
+    
+    
     private var categoriesKey: String { "categories_\(currentUser)" }
     private var datesKey: String      { "allDates_\(currentUser)" }
 
