@@ -6,14 +6,15 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct SignupPage: View {
     @Binding var isLoggedIn: Bool
-    @State private var username = ""
+    @State private var email = ""
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var errorMessage = ""
-
+    
     var body: some View {
         GeometryReader{ geo in
             ZStack {
@@ -31,17 +32,17 @@ struct SignupPage: View {
                         .font(.custom("Chewy-Regular", size: 50))
                         .foregroundColor(.white)
                     
-                    TextField("Username", text: $username)
+                    TextField("Username", text: $email)
                         .padding()
                         .background(Color.white.opacity(0.5))
                         .cornerRadius(25)
                         .shadow(radius: 2, y: 1)
-                    SecureField("Password", text: $password)
+                    TextField("Password", text: $password)
                         .padding()
                         .background(Color.white.opacity(0.5))
                         .cornerRadius(25)
                         .shadow(radius: 2, y: 1)
-                    SecureField("Confirm Password", text: $confirmPassword)
+                    TextField("Confirm Password", text: $confirmPassword)
                         .padding()
                         .background(Color.white.opacity(0.5))
                         .cornerRadius(25)
@@ -67,34 +68,28 @@ struct SignupPage: View {
             }
         }
     }
+    
+    /// Uses FirebaseAuth to create a new user
+       private func createAccount() {
+           // 1) Basic validation
+           guard !email.isEmpty else {
+               errorMessage = "Email cannot be empty."
+               return
+           }
+           guard password == confirmPassword, !password.isEmpty else {
+               errorMessage = "Passwords must match and not be empty."
+               return
+           }
 
-    private func createAccount() {
-        // Basic validation
-        guard !username.isEmpty else {
-            errorMessage = "Username cannot be empty."
-            return
-        }
-        guard password == confirmPassword, !password.isEmpty else {
-            errorMessage = "Passwords must match and not be empty."
-            return
-        }
-
-        // Load existing user→password map
-        var allCreds = UserDefaults.standard.dictionary(forKey: "allUserCredentials") as? [String:String] ?? [:]
-
-        // Prevent duplicates
-        guard allCreds[username] == nil else {
-            errorMessage = "An account named ‘\(username)’ already exists."
-            return
-        }
-
-        // Add new user
-        allCreds[username] = password
-        UserDefaults.standard.set(allCreds, forKey: "allUserCredentials")
-
-        // Immediately mark session
-        UserDefaults.standard.set(username, forKey: "currentUser")
-        errorMessage = ""
-        isLoggedIn = true
-    }
-}
+           // 2) Firebase create user call
+           Auth.auth().createUser(withEmail: email, password: password) { result, error in
+               if let error = error {
+                   // Show Firebase’s error message
+                   errorMessage = error.localizedDescription
+               } else {
+                   // Success: user is automatically logged in
+                   isLoggedIn = true
+               }
+           }
+       }
+   }

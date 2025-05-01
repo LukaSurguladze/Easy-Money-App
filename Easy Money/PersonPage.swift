@@ -6,32 +6,36 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct PersonPage: View {
-    @AppStorage("currentUser") private var currentUser: String = ""
     @State private var categories: [String] = []
     @State private var amounts: [String: Double] = [:]
-
     @State private var newGroupName = ""
     @State private var showAddAlert = false
     @State private var isEditing = false
 
+    // Firestore & Auth
+    private let db = Firestore.firestore()
+    private var uid: String? { Auth.auth().currentUser?.uid }
+    private let defaultCategories = ["Food", "Bills", "Activities"]
+
     var body: some View {
-        GeometryReader{ geo in
+        GeometryReader { geo in
             ZStack {
                 Image("CPbackground")
                     .resizable()
                     .scaledToFill()
                     .ignoresSafeArea()
-                    .frame(width: geo.size.width,
-                           height: geo.size.height)
-                
+                    .frame(width: geo.size.width, height: geo.size.height)
+
                 VStack(spacing: 0) {
                     Text("Your Categories")
                         .font(.custom("Chewy-Regular", size: 50))
                         .foregroundColor(.black)
                         .padding(.top)
-                    
+
                     List {
                         ForEach(categories, id: \.self) { cat in
                             HStack {
@@ -46,10 +50,10 @@ struct PersonPage: View {
                         .onDelete(perform: deleteCategories)
                     }
                     .listStyle(.insetGrouped)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
                     .background(Color.clear)
                     .scrollContentBackground(.hidden)
-                    
+
                     Button("Add New Category") {
                         showAddAlert = true
                     }
@@ -62,18 +66,13 @@ struct PersonPage: View {
                     .padding(.bottom, 10)
                 }
                 .toolbar {
-                    // Edit/Done button
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Button(isEditing ? "Done" : "Edit") {
                             withAnimation { isEditing.toggle() }
                         }
                     }
                 }
-                .environment(\.editMode, .constant(isEditing ? EditMode.active : EditMode.inactive))
-                .onAppear {
-                    loadCategories()
-                    loadSummary()
-                }
+                .onAppear { loadCategories() }
                 .alert("Add Category", isPresented: $showAddAlert) {
                     TextField("Category Name", text: $newGroupName)
                     Button("Add", action: addCategory)
@@ -84,105 +83,123 @@ struct PersonPage: View {
             }
         }
     }
-    
 
-    // MARK: - Keys
+    // MARK: - Firestore Operations
 
-    private var categoriesKey: String { "categories_\(currentUser)" }
-    private var datesKey:      String { "allDates_\(currentUser)"  }
-
-    // MARK: - Load / Save
-
+    /// Load categories from Firestore, seed defaults if empty, then compute net amounts
     private func loadCategories() {
-        if let saved = UserDefaults.standard.stringArray(forKey: categoriesKey) {
-            categories = saved
-        } else {
-            categories = ["Food", "Bills", "Activities"]
-            UserDefaults.standard.set(categories, forKey: categoriesKey)
-        }
+        guard let uid = uid else { return }
+        db.collection("users").document(uid)
+            .collection("categories")
+            .getDocuments { snap, error in
+                var fetched = snap?.documents.compactMap { $0.data()["name"] as? String } ?? []
+                if fetched.isEmpty {
+                    // seed default categories
+                    fetched = defaultCategories
+                    for name in defaultCategories {
+                        db.collection("users").document(uid)
+                          .collection("categories")
+                          .addDocument(data: ["name": name])
+                    }
+                }
+                categories = fetched
+                loadSummary()
+            }
     }
 
+    /// Compute net spent vs earned per category
     private func loadSummary() {
-        var spentTotals:  [String:Double] = [:]
-        var earnedTotals: [String:Double] = [:]
+        guard let uid = uid else { return }
+        var spentTotals: [String: Double] = [:]
+        var earnedTotals: [String: Double] = [:]
+        let group = DispatchGroup()
 
-        let allKeys = UserDefaults.standard.stringArray(forKey: datesKey) ?? []
-        for dayKey in allKeys {
-            guard
-               let dayData = UserDefaults.standard
-                 .dictionary(forKey: dayKey) as? [String:[String:Double]]
-            else { continue }
+        for category in categories {
+            group.enter()
+            // Query spends
+            db.collection("users").document(uid)
+              .collection("spends")
+              .whereField("category", isEqualTo: category)
+              .getDocuments { snap, _ in
+                  let spent = snap?.documents
+                      .compactMap { $0.data()["amount"] as? Double }
+                      .reduce(0, +) ?? 0
+                  spentTotals[category] = spent
 
-            for cat in categories {
-                if let d = dayData[cat] {
-                    spentTotals[cat]  = (spentTotals[cat]  ?? 0) + (d["spent"]  ?? 0)
-                    earnedTotals[cat] = (earnedTotals[cat] ?? 0) + (d["earned"] ?? 0)
-                }
+                  // Query earns
+                  db.collection("users").document(uid)
+                    .collection("earns")
+                    .whereField("category", isEqualTo: category)
+                    .getDocuments { snapE, _ in
+                        let earned = snapE?.documents
+                            .compactMap { $0.data()["amount"] as? Double }
+                            .reduce(0, +) ?? 0
+                        earnedTotals[category] = earned
+                        group.leave()
+                    }
+              }
+        }
+
+        group.notify(queue: .main) {
+            var net: [String: Double] = [:]
+            for category in categories {
+                let spent = spentTotals[category] ?? 0
+                let earned = earnedTotals[category] ?? 0
+                net[category] = earned - spent
             }
+            amounts = net
         }
-
-        var net: [String:Double] = [:]
-        for cat in categories {
-            net[cat] = (earnedTotals[cat] ?? 0) - (spentTotals[cat] ?? 0)
-        }
-        amounts = net
     }
 
-    // MARK: - Actions
-
+    /// Add a new category to Firestore
     private func addCategory() {
+        guard let uid = uid else { return }
         let trimmed = newGroupName.trimmingCharacters(in: .whitespaces)
-        guard
-            !trimmed.isEmpty,
-            !categories.contains(trimmed)
-        else { return }
-        categories.append(trimmed)
-        UserDefaults.standard.set(categories, forKey: categoriesKey)
-        newGroupName = ""
-        loadSummary()
+        guard !trimmed.isEmpty, !categories.contains(trimmed) else { return }
+        db.collection("users").document(uid)
+          .collection("categories")
+          .addDocument(data: ["name": trimmed]) { error in
+              if error == nil {
+                  newGroupName = ""
+                  loadCategories()
+              }
+          }
     }
 
+    /// Delete categories and associated records from Firestore
     private func deleteCategories(at offsets: IndexSet) {
-        // 1) Remove from the categories array
+        guard let uid = uid else { return }
         let removed = offsets.map { categories[$0] }
-        categories.remove(atOffsets: offsets)
-        UserDefaults.standard.set(categories, forKey: categoriesKey)
-
-        // 2) For each removed category, scrub past data
-        let allKeys = UserDefaults.standard.stringArray(forKey: datesKey) ?? []
-
-        for dayKey in allKeys {
-            // Load that day’s data
-            var dayData = UserDefaults.standard
-                .dictionary(forKey: dayKey) as? [String:[String:Double]] ?? [:]
-
-            // Remove any of the deleted categories
-            var changed = false
-            for cat in removed {
-                if dayData.removeValue(forKey: cat) != nil {
-                    changed = true
-                }
-            }
-
-            // If it changed, write it back
-            if changed {
-                UserDefaults.standard.set(dayData, forKey: dayKey)
-            }
+        for cat in removed {
+            // Delete category document
+            db.collection("users").document(uid)
+              .collection("categories")
+              .whereField("name", isEqualTo: cat)
+              .getDocuments { snap, _ in
+                  snap?.documents.forEach { $0.reference.delete() }
+              }
+            // Delete linked spends
+            db.collection("users").document(uid)
+              .collection("spends")
+              .whereField("category", isEqualTo: cat)
+              .getDocuments { snap, _ in
+                  snap?.documents.forEach { $0.reference.delete() }
+              }
+            // Delete linked earns
+            db.collection("users").document(uid)
+              .collection("earns")
+              .whereField("category", isEqualTo: cat)
+              .getDocuments { snap, _ in
+                  snap?.documents.forEach { $0.reference.delete() }
+                  // After deletion, reload
+                  loadCategories()
+              }
         }
-
-        // 3) Recompute the summary
-        loadSummary()
     }
 }
 
 struct PersonPage_Previews: PreviewProvider {
     static var previews: some View {
         PersonPage()
-            .onAppear {
-                UserDefaults.standard.set("alice", forKey: "currentUser")
-                UserDefaults.standard.set(["Food","Bills","Activities","Work"], forKey: "categories_alice")
-                UserDefaults.standard.set(["alice_2025-04-22"], forKey: "allDates_alice")
-                UserDefaults.standard.set(["Food":["spent":225.0,"earned":0.0]], forKey: "alice_2025-04-22")
-            }
     }
 }

@@ -6,13 +6,18 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct ReportPage: View {
-    @AppStorage("currentUser") private var currentUser: String = ""
+    private let db = Firestore.firestore()
+    private var uid: String? { Auth.auth().currentUser?.uid }
+   
     @State private var startDate = Date()
     @State private var endDate   = Date()
     @State private var totalSpent:  Double = 0
     @State private var totalEarned: Double = 0
+    @State private var errorMessage: String = ""
 
     var body: some View {
         GeometryReader{ geo in
@@ -67,29 +72,59 @@ struct ReportPage: View {
         }
     }
         
-        
-        
-    func generateReport() {
-        totalSpent = 0; totalEarned = 0
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        let cal = Calendar.current
-        let s = cal.startOfDay(for: startDate)
-        let e = cal.startOfDay(for: endDate)
-
-        let allKeys = UserDefaults.standard.stringArray(forKey: "allDates_\(currentUser)") ?? []
-        for dayKey in allKeys {
-            // dayKey = "\(username)_yyyy-MM-dd"
-            let parts = dayKey.split(separator: "_", maxSplits: 1)
-            guard parts.count == 2,
-                  let d = fmt.date(from: String(parts[1])),
-                  d >= s && d <= e,
-                  let dayData = UserDefaults.standard.dictionary(forKey: dayKey) as? [String:[String:Double]]
-            else { continue }
-
-            for catData in dayData.values {
-                totalSpent  += catData["spent"]  ?? 0
-                totalEarned += catData["earned"] ?? 0
+    /// Queries Firestore for spend/earn docs in the date range (inclusive of end date)
+        private func generateReport() {
+            guard let uid = uid else {
+                errorMessage = "User not logged in."
+                return
             }
+            errorMessage = ""
+            totalSpent = 0
+            totalEarned = 0
+
+            let calendar = Calendar.current
+            let startOfDay = calendar.startOfDay(for: startDate)
+            let endOfNextDay = calendar.date(byAdding: .day, value: 1,
+                                             to: calendar.startOfDay(for: endDate))!
+            let startTs = Timestamp(date: startOfDay)
+            let endTs   = Timestamp(date: endOfNextDay)
+
+            // Fetch spends within [start, end)
+            db.collection("users")
+              .document(uid)
+              .collection("spends")
+              .whereField("date", isGreaterThanOrEqualTo: startTs)
+              .whereField("date", isLessThan: endTs)
+              .getDocuments { snapshot, error in
+                  if let error = error {
+                      errorMessage = error.localizedDescription
+                  } else {
+                      totalSpent = snapshot?.documents
+                          .compactMap { $0.data()["amount"] as? Double }
+                          .reduce(0, +) ?? 0
+                  }
+              }
+
+            // Fetch earns within [start, end)
+            db.collection("users")
+              .document(uid)
+              .collection("earns")
+              .whereField("date", isGreaterThanOrEqualTo: startTs)
+              .whereField("date", isLessThan: endTs)
+              .getDocuments { snapshot, error in
+                  if let error = error {
+                      errorMessage = error.localizedDescription
+                  } else {
+                      totalEarned = snapshot?.documents
+                          .compactMap { $0.data()["amount"] as? Double }
+                          .reduce(0, +) ?? 0
+                  }
+              }
         }
     }
-}
+
+    struct ReportPage_Previews: PreviewProvider {
+        static var previews: some View {
+            ReportPage()
+        }
+    }

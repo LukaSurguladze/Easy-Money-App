@@ -126,16 +126,6 @@ struct HomePage: View {
                             }
                         Spacer()
                         
-                        /*NavigationLink("About Us", destination: AboutPage())
-                            .font(.custom("Chewy-Regular", size: 20))
-                            .foregroundColor(.black)
-                            .padding(.bottom, 4)
-                        
-                        Button("Logout") {
-                            logout()
-                        }
-                        .buttonStyle(logoutButton(color: .red))*/
-                        
                         HStack(spacing: 50) {
                             
                             Button("Logout") {
@@ -144,19 +134,11 @@ struct HomePage: View {
                             .font(.custom("Chewy-Regular", size: 35))
                             .foregroundColor(.black)
 
-                            
-                            /*NavigationLink("About Us", destination: AboutPage())
-                                .font(.custom("Chewy-Regular", size: 15))
-                                .foregroundColor(.black)*/
-
                     }
                         .padding(.bottom, 20)
                         
-                        
-                        
                     }
                
-            
             .padding()
             .navigationBarHidden(true)
         }

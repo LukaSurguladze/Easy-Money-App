@@ -6,18 +6,23 @@
 //
 
 import SwiftUI
+import FirebaseAuth
+import FirebaseFirestore
 
 struct MadePage: View {
-    @AppStorage("currentUser") private var currentUser: String = ""
+    
+    private let db = Firestore.firestore()
+    private var uid: String? { Auth.auth().currentUser?.uid }
+    
     @State private var categories: [String] = []
     @State private var amount = ""
     @State private var selectedCategory = ""
     @State private var selectedDate = Date()
     @State private var errorMessage = ""
     @State private var showConfirmation = false
-
+    
     @Environment(\.dismiss) private var dismiss
-
+    
     var body: some View {
         GeometryReader{ geo in
             ZStack {
@@ -31,7 +36,7 @@ struct MadePage: View {
                 
                 VStack(spacing: 16) {
                     Text("Amount Earned").font(.custom("Chewy-Regular", size: 50))
-                        
+                    
                     TextField("Amount", text: $amount)
                         .keyboardType(.decimalPad)
                         .font(.custom("Chewy-Regular", size: 20))
@@ -77,58 +82,51 @@ struct MadePage: View {
         }
     }
     
-    
-    
-    
-    private var categoriesKey: String { "categories_\(currentUser)" }
-    private var datesKey: String      { "allDates_\(currentUser)" }
-
     private func loadCategories() {
-        let saved = UserDefaults.standard.stringArray(forKey: categoriesKey)
-        categories = saved ?? ["Food", "Bills", "Activities"]
-        if selectedCategory.isEmpty, let first = categories.first {
-            selectedCategory = first
-        }
-    }
-
-    private func saveAmount() {
-        guard let value = Double(amount), value > 0 else {
-            errorMessage = "Please enter a valid amount."
-            return
-        }
-
-        let dateKey = "\(currentUser)_\(getDateKey(from: selectedDate))"
-        var dayData = UserDefaults.standard
-            .dictionary(forKey: dateKey) as? [String:[String:Double]] ?? [:]
-
-        var catData = dayData[selectedCategory] ?? ["spent":0, "earned":0]
-        catData["earned"] = (catData["earned"] ?? 0) + value
-        dayData[selectedCategory] = catData
-
-        UserDefaults.standard.set(dayData, forKey: dateKey)
-
-        var allDates = UserDefaults.standard.stringArray(forKey: datesKey) ?? []
-        if !allDates.contains(dateKey) {
-            allDates.append(dateKey)
-            UserDefaults.standard.set(allDates, forKey: datesKey)
+            guard let uid = uid else { return }
+            db.collection("users")
+              .document(uid)
+              .collection("categories")
+              .getDocuments { snap, error in
+                  if let docs = snap?.documents {
+                      let names = docs.compactMap { $0.data()["name"] as? String }
+                      categories = names.isEmpty ? ["Food","Bills","Activities"] : names
+                  } else {
+                      categories = ["Food","Bills","Activities"]
+                  }
+                  if selectedCategory.isEmpty {
+                      selectedCategory = categories.first ?? ""
+                  }
+              }
         }
 
-        amount = ""
-        errorMessage = ""
-        showConfirmation = true
-    }
+        private func saveAmount() {
+            guard let uid = uid else {
+                errorMessage = "User not logged in."
+                return
+            }
+            guard let value = Double(amount), value > 0 else {
+                errorMessage = "Please enter a valid amount."
+                return
+            }
 
-    private func getDateKey(from date: Date) -> String {
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        return fmt.string(from: date)
-    }
-}
+            let data: [String: Any] = [
+                "amount": value,
+                "category": selectedCategory,
+                "date": Timestamp(date: selectedDate)
+            ]
 
-struct MadePage_Previews: PreviewProvider {
-    static var previews: some View {
-        UserDefaults.standard.set(["bob"], forKey: "allUserCredentials")
-        UserDefaults.standard.set("bob", forKey: "currentUser")
-        UserDefaults.standard.set(["Food","Bills","Activities","Work"], forKey: "categories_bob")
-        return MadePage()
+            db.collection("users")
+              .document(uid)
+              .collection("earns")        // ← note "earns"
+              .addDocument(data: data) { error in
+                  if let error = error {
+                      errorMessage = error.localizedDescription
+                  } else {
+                      amount = ""
+                      errorMessage = ""
+                      showConfirmation = true
+                  }
+              }
+        }
     }
-}
