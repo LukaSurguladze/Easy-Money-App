@@ -42,7 +42,7 @@ struct PersonPage: View {
                                 Text(cat)
                                     .font(.custom("Chewy-Regular", size: 20))
                                 Spacer()
-                                Text("$\(amounts[cat] ?? 0, specifier: "%.2f")")
+                                Text("$\(abs(amounts[cat] ?? 0), specifier: "%.2f")")
                                     .font(.custom("Chewy-Regular", size: 20))
                             }
                             .listRowBackground(Color.clear)

@@ -10,6 +10,8 @@
 		B142A4B02DC3EDAA00240E89 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = B142A4AF2DC3EDAA00240E89 /* FirebaseAuth */; };
 		B142A4B22DC3EDAA00240E89 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = B142A4B12DC3EDAA00240E89 /* FirebaseFirestore */; };
 		B142A4B42DC4092A00240E89 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = B142A4B32DC4092A00240E89 /* FirebaseCore */; };
+		B142A4B62DC410CD00240E89 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = B142A4B52DC410CD00240E89 /* FirebaseAnalytics */; };
+		B142A4B82DC410CD00240E89 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = B142A4B72DC410CD00240E89 /* FirebaseCrashlytics */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -60,6 +62,8 @@
 			files = (
 				B142A4B02DC3EDAA00240E89 /* FirebaseAuth in Frameworks */,
 				B142A4B42DC4092A00240E89 /* FirebaseCore in Frameworks */,
+				B142A4B82DC410CD00240E89 /* FirebaseCrashlytics in Frameworks */,
+				B142A4B62DC410CD00240E89 /* FirebaseAnalytics in Frameworks */,
 				B142A4B22DC3EDAA00240E89 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -124,6 +128,8 @@
 				B142A4AF2DC3EDAA00240E89 /* FirebaseAuth */,
 				B142A4B12DC3EDAA00240E89 /* FirebaseFirestore */,
 				B142A4B32DC4092A00240E89 /* FirebaseCore */,
+				B142A4B52DC410CD00240E89 /* FirebaseAnalytics */,
+				B142A4B72DC410CD00240E89 /* FirebaseCrashlytics */,
 			);
 			productName = "Easy Money";
 			productReference = B12B7A7D2DB2CCA000F51015 /* Easy Money.app */;
@@ -409,7 +415,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = GNRMW6Y6TS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Easy-Money-Info.plist";
@@ -424,11 +431,15 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "EM.Easy-Money";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lukasurguladze.pocketinsight;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -438,7 +449,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
+				DEVELOPMENT_TEAM = GNRMW6Y6TS;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Easy-Money-Info.plist";
@@ -453,11 +465,15 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "EM.Easy-Money";
+				PRODUCT_BUNDLE_IDENTIFIER = com.lukasurguladze.pocketinsight;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -596,6 +612,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = B142A4AE2DC3EDAA00240E89 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		B142A4B52DC410CD00240E89 /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B142A4AE2DC3EDAA00240E89 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		B142A4B72DC410CD00240E89 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B142A4AE2DC3EDAA00240E89 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

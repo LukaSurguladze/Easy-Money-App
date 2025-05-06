@@ -32,7 +32,7 @@ struct LoginPage: View {
                             .font(.custom("Chewy-Regular", size: 50))
                             .foregroundColor(.white)
                         
-                        TextField("Username", text: $username)
+                        TextField("Email", text: $username)
                             .padding()
                             .background(Color.white.opacity(0.5))
                             .cornerRadius(25)

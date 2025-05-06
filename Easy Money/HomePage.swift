@@ -98,11 +98,18 @@ struct HomePage: View {
                     VStack(spacing: 24) {
                         
                         HStack {
+                            NavigationLink("Delete Account", destination: DeleteAccount())
+                                .font(.custom("Chewy-Regular", size: 14))
+                                .foregroundColor(.black)
+                                .padding(.top, -20)
+                                .padding(.trailing, 185)
+                            
                             NavigationLink("About Us", destination: AboutPage())
                                 .font(.custom("Chewy-Regular", size: 14))
                                 .foregroundColor(.black)
                                 .padding(.top, -20)
                                 .padding(.trailing, 20)
+                            
                         }
                         .frame(maxWidth: .infinity, alignment: .topTrailing)
                         

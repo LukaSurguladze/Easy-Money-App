@@ -8,37 +8,40 @@
 import SwiftUI
 import FirebaseCore
 import FirebaseFirestore
+import FirebaseCrashlytics
+import FirebaseAnalytics
 
-// ② Define an AppDelegate to call FirebaseApp.configure()
 class AppDelegate: NSObject, UIApplicationDelegate {
   func application(
     _ application: UIApplication,
-    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    didFinishLaunchingWithOptions
+      launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
+    // 1. Initialize the core Firebase SDK
     FirebaseApp.configure()
+
+    // 2. Enable Crashlytics collection
+    Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
+
+    // 3. Log a first “app_open” event for Analytics
+    Analytics.logEvent(AnalyticsEventAppOpen, parameters: nil)
+
+    // 4. Turn on Firestore’s on-disk cache
+      let settings = Firestore.firestore().settings
+    settings.cacheSettings = PersistentCacheSettings()
+    Firestore.firestore().settings = settings
+
     return true
   }
 }
 
 @main
 struct Easy_MoneyApp: App {
-  // ③ Register the delegate
   @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
 
   var body: some Scene {
     WindowGroup {
       ContentView()
-        .onAppear {
-          // ④ Enable Firestore offline persistence
-            // grab the existing settings
-            let settings = Firestore.firestore().settings
-
-            // explicitly use the persistent (on-disk) cache
-            settings.cacheSettings = PersistentCacheSettings()
-
-            // commit them back
-            Firestore.firestore().settings = settings
-        }
     }
   }
 }

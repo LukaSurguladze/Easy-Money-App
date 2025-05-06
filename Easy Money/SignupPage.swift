@@ -32,7 +32,7 @@ struct SignupPage: View {
                         .font(.custom("Chewy-Regular", size: 50))
                         .foregroundColor(.white)
                     
-                    TextField("Username", text: $email)
+                    TextField("Email", text: $email)
                         .padding()
                         .background(Color.white.opacity(0.5))
                         .cornerRadius(25)
