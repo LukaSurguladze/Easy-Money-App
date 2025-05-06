@@ -10,58 +10,72 @@ import FirebaseAuth
 import FirebaseFirestore
 
 struct DeleteAccount: View {
+  @EnvironmentObject private var session: SessionStore
   @Environment(\.presentationMode) private var presentationMode
 
   @State private var isDeleting = false
   @State private var alertItem: AlertItem?
 
-  var body: some View {
-    NavigationView {
-      ZStack {
-        Image("PIBackground")
-          .resizable()
-          .scaledToFill()
-          .ignoresSafeArea()
-
-        VStack(spacing: 32) {
-          Spacer(minLength: 40)
-
-          Text("Delete Account")
-            .font(.custom("Chewy-Regular", size: 36))
-            .foregroundColor(.black)
-
-          Text("""
-            Deleting your account will permanently remove **all** of your data \
-            (categories, earnings, spending, settings). This action **cannot be undone**.
-            """)
-            .multilineTextAlignment(.center)
-            .font(.custom("Chewy-Regular", size: 18))
-            .foregroundColor(.black)
-            .padding(.horizontal, 32)
-
-          if isDeleting {
-            ProgressView("Deleting…")
-              .progressViewStyle(.circular)
-          } else {
-            Button("Delete My Account") {
-              showConfirmation()
+    var body: some View {
+        
+        NavigationView {
+            GeometryReader { geo in
+                ZStack {
+                    // 1) Your fullscreen background
+                    Image("AppBackground")
+                        .resizable()
+                        .scaledToFill()
+                        .edgesIgnoringSafeArea(.all)
+                        .frame(width: geo.size.width,
+                               height: geo.size.height)
+                    
+                    
+                    VStack(spacing: 32) {
+                        Spacer(minLength: 40)
+                        
+                        Text("Delete Account")
+                            .font(.custom("Chewy-Regular", size: 36))
+                            .foregroundColor(.black)
+                        
+                        Text("""
+        Deleting your account will permanently remove **all** of your data \
+        (categories, earnings, spending, settings). This action **cannot be undone**.
+        """)
+                        .multilineTextAlignment(.center)
+                        .font(.custom("Chewy-Regular", size: 18))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 32)
+                        
+                        if isDeleting {
+                            ProgressView("Deleting…")
+                                .progressViewStyle(.circular)
+                        } else {
+                            Button("Delete My Account") {
+                                showConfirmation()
+                            }
+                            .font(.custom("Chewy-Regular", size: 20))
+                            .foregroundColor(.white)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 32)
+                            .background(Color.red)
+                            .cornerRadius(12)
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding()
+                    .background(
+                        Image("PIBackground")
+                            .resizable()
+                            .scaledToFill()
+                            .ignoresSafeArea()
+                    )
+                    .navigationBarBackButtonHidden(isDeleting)
+                    .alert(item: $alertItem) { $0.alert }
+                }
             }
-            .font(.custom("Chewy-Regular", size: 20))
-            .foregroundColor(.white)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 32)
-            .background(Color.red)
-            .cornerRadius(12)
-          }
-
-          Spacer()
         }
-        .padding()
-      }
-      .navigationBarBackButtonHidden(isDeleting)
-      .alert(item: $alertItem) { $0.alert }
     }
-  }
 
   private func showConfirmation() {
     alertItem = .init(
@@ -79,23 +93,17 @@ struct DeleteAccount: View {
     guard let user = Auth.auth().currentUser else { return }
     isDeleting = true
 
-    let db     = Firestore.firestore()
-    let userID = user.uid
-    let userRef = db.collection("users").document(userID)
+    let db      = Firestore.firestore()
+    let userRef = db.collection("users").document(user.uid)
 
-    // 1) Hard-coded list of your subcollections
-    let subCollections = [
-      "spends",      // <— rename to your exact path
-      "earns",     // <— rename to your exact path
-      "categories", // <— rename to your exact path
-      "settings"    // <— rename if different / remove if none
-    ]
+    // — your subcollections —
+    let subCollections = ["spends","earns","categories","settings"]
 
     do {
-      // delete each sub-collection’s docs
+      // 1) delete all docs in each subcollection
       for col in subCollections {
-        let snapshot = try await userRef.collection(col).getDocuments()
-        for doc in snapshot.documents {
+        let snap = try await userRef.collection(col).getDocuments()
+        for doc in snap.documents {
           try await doc.reference.delete()
         }
       }
@@ -103,11 +111,13 @@ struct DeleteAccount: View {
       // 2) delete the user document itself
       try await userRef.delete()
 
-      // 3) delete the Auth account
+      // 3) delete the Auth user
       try await user.delete()
 
-      // 4) sign out & pop back to login
+      // 4) sign out — triggers SessionStore to flip back to LoginPage
       try Auth.auth().signOut()
+
+      // 5) (optional) dismiss this view
       presentationMode.wrappedValue.dismiss()
 
     } catch {
@@ -123,17 +133,18 @@ struct DeleteAccount: View {
 }
 
 
-/// A little helper so we can drive `.alert(item:)` with dynamic buttons
+/// Helper so we can drive `.alert(item:)`
 private struct AlertItem: Identifiable {
   let id = UUID()
   let alert: Alert
 
-  init(title: Text,
-       message: Text? = nil,
-       primaryButton: Alert.Button? = nil,
-       secondaryButton: Alert.Button? = nil,
-       dismissButton: Alert.Button? = nil)
-  {
+  init(
+    title: Text,
+    message: Text? = nil,
+    primaryButton: Alert.Button? = nil,
+    secondaryButton: Alert.Button? = nil,
+    dismissButton: Alert.Button? = nil
+  ) {
     if let p = primaryButton, let s = secondaryButton {
       alert = Alert(title: title, message: message, primaryButton: p, secondaryButton: s)
     } else if let d = dismissButton {

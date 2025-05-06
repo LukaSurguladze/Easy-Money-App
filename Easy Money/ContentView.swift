@@ -8,22 +8,21 @@
 import SwiftUI
 
 struct ContentView: View {
-    @State private var isLoggedIn: Bool = false
+    // 1) One source of truth for auth state
+    @StateObject private var session = SessionStore()
 
     var body: some View {
         Group {
-            if isLoggedIn {
-                HomePage(isLoggedIn: $isLoggedIn)
+            if session.isLoggedIn {
+                // 2) Pass the binding into your HomePage
+                HomePage(isLoggedIn: $session.isLoggedIn)
             } else {
-                LoginPage(isLoggedIn: $isLoggedIn)
+                // 3) Or into your LoginPage
+                LoginPage(isLoggedIn: $session.isLoggedIn)
             }
         }
-        .onAppear {
-            // Auto-login if credentials still exist
-            if let _ = UserDefaults.standard.dictionary(forKey: "userCredentials") {
-                isLoggedIn = true
-            }
-        }
+        // no more UserDefaults lookup!
+        .environmentObject(session)
     }
 }
 
